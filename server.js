@@ -110,7 +110,7 @@ app.get('/', (req, res) => {
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Ako's Kubernetes Todo App</title>
+        <title>Ako's Todo App</title>
         <style>
           :root {
             --bg: #f1f5f9;
