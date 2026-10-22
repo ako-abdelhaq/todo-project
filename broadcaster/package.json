@@ -1,0 +1,13 @@
+{
+  "name": "ako-server",
+  "version": "1.0.0",
+  "description": "Backend message broadcaster for kube project",
+  "main": "broadcaster.js",
+  "scripts": {
+    "start": "node broadcaster.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "nats": "^2.29.3"
+  }
+}

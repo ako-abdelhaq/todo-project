@@ -1,0 +1,14 @@
+{
+  "name": "ako-server-backend",
+  "version": "1.1.0",
+  "description": "Backend API server for handling todo tasks for kube project",
+  "main": "backend.js",
+  "scripts": {
+    "start": "node backend.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "pg": "^8.13.0",
+    "nats": "^2.29.3"
+  }
+}

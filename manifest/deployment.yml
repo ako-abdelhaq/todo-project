@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: project
+  name: ako-project-dep
+  annotations:
+    kubernetes.io/change-cause: "Project v8"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ako-project
+  template:
+    metadata:
+      labels:
+        app: ako-project
+    spec:
+      volumes:
+        - name: image-cache-volume
+          persistentVolumeClaim:
+            claimName: image-cache-pvc
+      containers:
+        - name: ako-project
+          image: ako99/ako-project:v8  # v2 without todos , v3 with todos , v4 with todos backend , v5 uses env variables, v6 adding health checks, v7 refining UI and adding done feature
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: TODOS_API_URL
+              value: "http://localhost:8090"
+            - name: CACHE_DIR
+              value: "/usr/src/app/backend/files"
+            - name: IMAGE_URL
+              value: "https://picsum.photos/1200"
+          volumeMounts:
+            - name: image-cache-volume
+              mountPath: /usr/src/app/backend/files
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10 # Wait 10s after container start before first check
+            periodSeconds: 5        # Check every 5 seconds
+            timeoutSeconds: 2       # Fail the check if todos backend doesn't respond within 2s
+            failureThreshold: 3     # Remove pod from Service endpoints after 3 failures
+            successThreshold: 1     # Mark Ready as soon as 1 check returns HTTP 200
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "250m"
+        - name: todo-backend
+          image: ako99/todo-backend:v6 # v2 with postgres v3 enhanced logging, v4 adding health checks, v6 adding nast messaging capabilities
+          imagePullPolicy: Always            
+          envFrom:
+          - secretRef:
+              name: ako-postgres-secret
+          env:
+            - name: PORT
+              value: "8090"
+            - name: DB_HOST
+              value: "ako-postgres-svc"
+            - name: DB_PORT
+              value: "5432"
+            - name: NATS_URL
+              value: "nats://my-nats:4222"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8090
+            initialDelaySeconds: 10 # Wait 10s after container start before first check
+            periodSeconds: 5        # Check every 5 seconds
+            timeoutSeconds: 2       # Fail the check if DB doesn't respond within 2s
+            failureThreshold: 3     # Remove pod from Service endpoints after 3 failures
+            successThreshold: 1     # Mark Ready as soon as 1 check returns HTTP 200
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "250m"
