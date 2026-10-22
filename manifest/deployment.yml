@@ -54,7 +54,7 @@ spec:
               memory: "128Mi"
               cpu: "250m"
         - name: todo-backend
-          image: ako99/todo-backend:v6 # v2 with postgres v3 enhanced logging, v4 adding health checks, v6 adding nast messaging capabilities
+          image: ako99/todo-backend:78bab7ac527808acf12bbde39ca1e16d5614aa8f
           imagePullPolicy: Always            
           envFrom:
           - secretRef:
