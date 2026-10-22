@@ -59,10 +59,10 @@ jobs:
 
       - name: Update image tags directly in YAML manifest
         run: |
-          sed -i -E "s|image: (.*/)?todo-app:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-app:${{ github.sha }}|g" manifest/deployment.yaml
-          sed -i -E "s|image: (.*/)?todo-backend:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend:${{ github.sha }}|g" manifest/deployment.yaml
-          sed -i -E "s|image: (.*/)?broadcaster:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/broadcaster:${{ github.sha }}|g" manifest/broadcaster-deployment.yaml
-          sed -i -E "s|image: (.*/)?todo-cronjob:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-cronjob:${{ github.sha }}|g" manifest/cronjob.yaml
+          sed -i -E "s|image: (.*/)?todo-app:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-app:${{ github.sha }}|g" manifest/deployment.yml
+          sed -i -E "s|image: (.*/)?todo-backend:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend:${{ github.sha }}|g" manifest/deployment.yml
+          sed -i -E "s|image: (.*/)?broadcaster:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/broadcaster:${{ github.sha }}|g" manifest/broadcaster-deployment.yml
+          sed -i -E "s|image: (.*/)?todo-cronjob:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-cronjob:${{ github.sha }}|g" manifest/cronjob.yml
 
       - name: Commit and push updated manifest
         run: |
