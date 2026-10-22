@@ -5,7 +5,7 @@ metadata:
   namespace: project
 spec:
   parentRefs:
-    - name: ako-project-gateway
+    - name: ako-todo-gateway
   rules:
     # Rule 1:
     - matches:

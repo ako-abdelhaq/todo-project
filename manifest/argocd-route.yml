@@ -18,7 +18,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: ReferenceGrant
 metadata:
-  name: allow-exercises-route-to-argocd
+  name: allow-todo-route-to-argocd
   namespace: argocd
 spec:
   from:

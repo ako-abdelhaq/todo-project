@@ -17,3 +17,5 @@ helm upgrade --install grafana grafana/grafana \
 echo "Everything is set up correctly "
 
 echo "kubectl port-forward --namespace project-monitoring svc/grafana 2000:80"
+
+cd ..
