@@ -24,7 +24,7 @@ spec:
   from:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      namespace: exercises
+      namespace: project
   to:
     - group: ""
       kind: Service
