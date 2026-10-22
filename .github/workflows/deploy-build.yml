@@ -1,4 +1,4 @@
-name: Release Todo App (Plain Manifests GitOps)
+name: Release Todo App
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  build-and-update-manifests:
+  build-and-update-manifest:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -57,17 +57,17 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/todo-cronjob:${{ github.sha }}
 
-      - name: Update image tags directly in YAML manifests
+      - name: Update image tags directly in YAML manifest
         run: |
-          sed -i -E "s|image: (.*/)?todo-app:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-app:${{ github.sha }}|g" manifests/deployment.yaml
-          sed -i -E "s|image: (.*/)?todo-backend:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend:${{ github.sha }}|g" manifests/deployment.yaml
-          sed -i -E "s|image: (.*/)?broadcaster:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/broadcaster:${{ github.sha }}|g" manifests/broadcaster.yaml
-          sed -i -E "s|image: (.*/)?todo-cronjob:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-cronjob:${{ github.sha }}|g" manifests/cronjob.yaml
+          sed -i -E "s|image: (.*/)?todo-app:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-app:${{ github.sha }}|g" manifest/deployment.yaml
+          sed -i -E "s|image: (.*/)?todo-backend:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend:${{ github.sha }}|g" manifest/deployment.yaml
+          sed -i -E "s|image: (.*/)?broadcaster:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/broadcaster:${{ github.sha }}|g" manifest/broadcaster-deployment.yaml
+          sed -i -E "s|image: (.*/)?todo-cronjob:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-cronjob:${{ github.sha }}|g" manifest/cronjob.yaml
 
-      - name: Commit and push updated manifests
+      - name: Commit and push updated manifest
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add manifests/*.yaml
+          git add manifest/*.yaml
           git diff --staged --quiet || git commit -m "Update manifest images to ${{ github.sha }} [skip ci]"
           git push origin main
