@@ -54,7 +54,7 @@ spec:
               memory: "128Mi"
               cpu: "250m"
         - name: todo-backend
-          image: ako99/todo-backend:c42bb9531192c1b8d8e6653612b775abd1ecb01b
+          image: ako99/todo-backend:dacbda2d725caf35c7d010db87ff5f806df1eb61
           imagePullPolicy: Always            
           envFrom:
           - secretRef:
