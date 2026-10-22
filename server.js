@@ -371,7 +371,7 @@ app.get('/', (req, res) => {
               <div class="hero-overlay">
                 <div class="hero-header">
                   <h1>Ako's Todo App</h1>
-                  <span class="cache-badge">Cached Image: ${ageDisplay}</span>
+                  <span class="cache-badge">Cached Image: ${ageDisplay} </span>
                 </div>
               </div>
             </div>
