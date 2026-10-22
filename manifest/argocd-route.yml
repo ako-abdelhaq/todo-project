@@ -5,7 +5,7 @@ metadata:
   namespace: project
 spec:
   parentRefs:
-    - name: ako-gateway
+    - name: ako-todo-gateway
       sectionName: http
   hostnames:
     - argocd.localhost
