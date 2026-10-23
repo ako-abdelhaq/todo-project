@@ -116,8 +116,8 @@ async function initDb() {
         await pool.query(`
           INSERT INTO todos (content, done) VALUES
             ('Learn Kubernetes fundamentals', true),
-            ('Configure PersistentVolume and Ingress in k3d', false),
-            ('Build the Todo backend microservice', false);
+            ('Configure PersistentVolume and Ingress in k3d', true),
+            ('Build the Todo backend microservice', true);
         `);
 
         console.log(`[${new Date().toISOString()}] [INFO] Seeded initial todos into PostgreSQL.`);
