@@ -149,9 +149,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          git pull --rebase origin main
           git add manifest/production/*.yml
           git diff --staged --quiet || (
-            git commit -m "production: update images for ${{ github.sha }} [skip ci]"
-            git pull --rebase origin main
-            git push origin main
+            git commit -m "Production: release ${{ github.ref_name }}"
+            git push origin HEAD:main
           )
