@@ -94,7 +94,7 @@ app.get('/image', async (req, res) => {
 
 // Root URL serving the HTML and client-side JavaScript
 app.get('/', (req, res) => {
-  let ageSeconds = 'Downloading image...';
+  let ageSeconds = 'Uploading image...';
   let ageDisplay = ageSeconds;
   if (fs.existsSync(IMAGE_PATH)) {
     const stats = fs.statSync(IMAGE_PATH);
