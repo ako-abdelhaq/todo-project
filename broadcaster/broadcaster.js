@@ -21,7 +21,7 @@ async function forwardToChat(eventData) {
 
   // In staging, only log the message and do not forward to external services
   if (LOG_ONLY) {
-    console.log(`[${new Date().toISOString()}] [STAGING LOG-ONLY] ${textMessage_}`);
+    console.log(`[${new Date().toISOString()}] [STAGING| LOG-ONLY] ${textMessage_}`);
     return;
   }
 
