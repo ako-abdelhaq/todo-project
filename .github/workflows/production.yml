@@ -151,7 +151,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin main
           git checkout main
-          git add manifest/production/*.yaml
+          git add manifest/production/*.yml
           git diff --staged --quiet || (
             git commit -m "Production: release ${{ github.ref_name }}"
             git push origin main
