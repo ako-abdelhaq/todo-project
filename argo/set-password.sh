@@ -11,7 +11,7 @@ sleep 1
 
 kubectl -n argocd rollout restart deployment argocd-server
 
-sleep 10
+sleep 15
 
 kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath='{.data.password}' | base64 -d
