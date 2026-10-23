@@ -21,7 +21,7 @@ spec:
             claimName: staging-image-cache-pvc
       containers:
         - name: ako-project
-          image: ako99/todo-app:9071fcc39ac7f607db5f6d9edc216d26b366bf8b
+          image: ako99/todo-app:7e868cd9021cee8a70b80189ff846e72f4cc5783
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
