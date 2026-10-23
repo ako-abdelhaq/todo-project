@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: broadcaster
-          image: ako99/broadcaster:a0f0a1efe6d5da0160359bba002388dbad927983
+          image: ako99/broadcaster:745ba5096c9734eb57f483b9fef86bc3f26d964c
           imagePullPolicy: Always
           env:
             - name: NATS_URL

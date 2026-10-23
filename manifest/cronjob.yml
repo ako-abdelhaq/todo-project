@@ -12,7 +12,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: todo-cronjob
-              image: ako99/todo-cronjob:a0f0a1efe6d5da0160359bba002388dbad927983
+              image: ako99/todo-cronjob:745ba5096c9734eb57f483b9fef86bc3f26d964c
               imagePullPolicy: Always
               env:
                 - name: BACKEND_URL
