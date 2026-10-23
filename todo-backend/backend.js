@@ -116,7 +116,7 @@ async function initDb() {
         await pool.query(`
           INSERT INTO todos (content, done) VALUES
             ('Learn Kubernetes fundamentals', true),
-            ('Configure PersistentVolume and Ingress in k3d', true),
+            ('Configure PersistentVolume and Ingress in k3d', false),
             ('Build the Todo backend microservice', false);
         `);
 
