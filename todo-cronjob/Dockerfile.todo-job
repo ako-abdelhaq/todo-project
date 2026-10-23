@@ -1,0 +1,6 @@
+FROM alpine:3.20
+RUN apk add --no-cache curl
+WORKDIR /usr/src/generate-todo
+COPY generate-todo.sh .
+RUN chmod +x generate-todo.sh
+CMD ["./generate-todo.sh"]

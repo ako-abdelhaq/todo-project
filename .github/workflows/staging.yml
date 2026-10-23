@@ -1,0 +1,183 @@
+
+name: Release Todo App - staging
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: gitops-ako-abdelhaq-todo-project-config-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-update-manifest-staging:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the application repository
+      - name: Checkout application repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. Detect which microservices have changed
+      - name: Detect changed microservice directories
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            todo_app:
+              - 'todo-app/**'
+            todo_backend:
+              - 'to-do-backend/**'
+            broadcaster:
+              - 'broadcaster/**'
+            todo_cronjob:
+              - 'todo-cronjob/**'
+
+      # 3. Set up Docker Buildx
+      - name: Set up Docker Buildx
+        if: |
+          steps.changes.outputs.todo_app == 'true' ||
+          steps.changes.outputs.todo_backend == 'true' ||
+          steps.changes.outputs.broadcaster == 'true' ||
+          steps.changes.outputs.todo_cronjob == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      # 4. Log in to Docker Hub
+      - name: Log in to Docker Hub
+        if: |
+          steps.changes.outputs.todo_app == 'true' ||
+          steps.changes.outputs.todo_backend == 'true' ||
+          steps.changes.outputs.broadcaster == 'true' ||
+          steps.changes.outputs.todo_cronjob == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 5. Build and push changed microservices
+      - name: Build and push todo-app
+        if: steps.changes.outputs.todo_app == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./todo-app
+          file: ./todo-app/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/todo-app:${{ github.sha }}
+
+      - name: Build and push todo-backend
+        if: steps.changes.outputs.todo_backend == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./to-do-backend
+          file: ./to-do-backend/Dockerfile.backend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend:${{ github.sha }}
+
+      - name: Build and push broadcaster
+        if: steps.changes.outputs.broadcaster == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./broadcaster
+          file: ./broadcaster/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/broadcaster:${{ github.sha }}
+
+      - name: Build and push todo-cronjob
+        if: steps.changes.outputs.todo_cronjob == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./todo-cronjob
+          file: ./todo-cronjob/Dockerfile.todo-job
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/todo-cronjob:${{ github.sha }}
+
+      # 6. Checkout the separate configuration repository
+      - name: Checkout configuration repository
+        if: |
+          steps.changes.outputs.todo_app == 'true' ||
+          steps.changes.outputs.todo_backend == 'true' ||
+          steps.changes.outputs.broadcaster == 'true' ||
+          steps.changes.outputs.todo_cronjob == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ako-abdelhaq/todo-project-config
+          ref: main
+          token: ${{ secrets.CONFIG_REPO_TOKEN }}
+          path: config
+          fetch-depth: 0
+
+      # 7. Update manifests in the configuration repository
+      - name: Update staging image tags
+        if: |
+          steps.changes.outputs.todo_app == 'true' ||
+          steps.changes.outputs.todo_backend == 'true' ||
+          steps.changes.outputs.broadcaster == 'true' ||
+          steps.changes.outputs.todo_cronjob == 'true'
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          IMAGE_TAG: ${{ github.sha }}
+          APP_CHANGED: ${{ steps.changes.outputs.todo_app }}
+          BACKEND_CHANGED: ${{ steps.changes.outputs.todo_backend }}
+          BROADCASTER_CHANGED: ${{ steps.changes.outputs.broadcaster }}
+          CRONJOB_CHANGED: ${{ steps.changes.outputs.todo_cronjob }}
+        run: |
+          set -euo pipefail
+
+          if [ "$APP_CHANGED" = "true" ]; then
+            sed -i -E \
+              "s|image: (.*/)?todo-app:.*|image: ${DOCKERHUB_USERNAME}/todo-app:${IMAGE_TAG}|g" \
+              config/manifest/staging/deployment.yml
+          fi
+
+          if [ "$BACKEND_CHANGED" = "true" ]; then
+            sed -i -E \
+              "s|image: (.*/)?todo-backend:.*|image: ${DOCKERHUB_USERNAME}/todo-backend:${IMAGE_TAG}|g" \
+              config/manifest/staging/deployment.yml
+          fi
+
+          if [ "$BROADCASTER_CHANGED" = "true" ]; then
+            sed -i -E \
+              "s|image: (.*/)?broadcaster:.*|image: ${DOCKERHUB_USERNAME}/broadcaster:${IMAGE_TAG}|g" \
+              config/manifest/staging/broadcaster-deployment.yml
+          fi
+
+          if [ "$CRONJOB_CHANGED" = "true" ]; then
+            sed -i -E \
+              "s|image: (.*/)?todo-cronjob:.*|image: ${DOCKERHUB_USERNAME}/todo-cronjob:${IMAGE_TAG}|g" \
+              config/manifest/staging/cronjob.yml
+          fi
+
+      # 8. Commit and push to the CONFIGURATION repository
+      - name: Commit and push updated staging manifests
+        if: |
+          steps.changes.outputs.todo_app == 'true' ||
+          steps.changes.outputs.todo_backend == 'true' ||
+          steps.changes.outputs.broadcaster == 'true' ||
+          steps.changes.outputs.todo_cronjob == 'true'
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          git -C config config user.name "github-actions[bot]"
+          git -C config config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git -C config add -- manifest/staging/
+
+          if git -C config diff --cached --quiet; then
+            echo "No manifest changes to commit."
+            exit 0
+          fi
+
+          git -C config commit \
+            -m "Staging: update images for ${IMAGE_TAG}"
+
+          git -C config pull --rebase origin main
+          git -C config push origin HEAD:main

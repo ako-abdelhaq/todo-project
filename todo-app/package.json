@@ -1,0 +1,12 @@
+{
+  "name": "ako-server",
+  "version": "1.0.0",
+  "description": "Backend API server for kube project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
