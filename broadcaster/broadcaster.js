@@ -17,7 +17,7 @@ const sc = StringCodec();
 
 async function forwardToChat(eventData) {
 
-  const textMessage_ = `[Broadcaster: ${POD_NAME}] Todo ${eventData.action}: #${eventData.todo.id} "${eventData.todo.content}" (done : ${eventData.todo.done})`;
+  const textMessage_ = `[Broadcaster: ${POD_NAME}] Todo ${eventData.action}: #${eventData.todo.id} "${eventData.todo.content}" (done: ${eventData.todo.done})`;
 
   // In staging, only log the message and do not forward to external services
   if (LOG_ONLY) {
