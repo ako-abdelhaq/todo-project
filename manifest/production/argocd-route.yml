@@ -2,7 +2,7 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   name: argocd
-  namespace: project
+  namespace: default
 spec:
   parentRefs:
     - name: ako-todo-gateway
@@ -24,7 +24,7 @@ spec:
   from:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      namespace: project
+      namespace: default
   to:
     - group: ""
       kind: Service

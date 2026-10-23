@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: project
+  namespace: staging
   name: ako-project-dep
   annotations:
     kubernetes.io/change-cause: "Project v8"
@@ -18,7 +18,7 @@ spec:
       volumes:
         - name: image-cache-volume
           persistentVolumeClaim:
-            claimName: image-cache-pvc
+            claimName: staging-image-cache-pvc
       containers:
         - name: ako-project
           image: ako99/todo-app:5ec216ce81d6a16a60832f630aedfd36006f15a7

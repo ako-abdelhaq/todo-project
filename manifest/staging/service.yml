@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: staging
+  name: ako-project-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: ako-project
+  ports:
+    - name: frontend
+      port: 2080
+      targetPort: 8080
+    - name: backend
+      port: 2090
+      targetPort: 8090

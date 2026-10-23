@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  namespace: staging
+  name: todo-generator
+spec:
+  schedule: "0 * * * *" # Runs every hour at minute 0
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: todo-cronjob
+              image: ako99/todo-cronjob:5ec216ce81d6a16a60832f630aedfd36006f15a7
+              imagePullPolicy: Always
+              env:
+                - name: BACKEND_URL
+                  value: "http://ako-project-svc:2090/todos"

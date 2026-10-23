@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: project
+  namespace: staging
   name: broadcaster-dep
 spec:
   replicas: 6
@@ -22,6 +22,8 @@ spec:
               value: "nats://my-nats:4222"
             - name: QUEUE_GROUP
               value: "todo-broadcaster-workers"
+            - name: LOG_ONLY
+              value: "true"
           envFrom:
             - secretRef:
                 name: broadcaster-secret

@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yml             
+  - broadcaster-secret.yml  
+  - gateway-api.yml      
+  - nats-service.yml          
+  - pv.yml
+  - argocd-route.yml            
+  - cronjob.yml             
+  - gateway-class.yml    
+  - postgres-service.yml      
+  - service.yml                       
+  - db-secret.yml           
+  - http-route.yml       
+  - postgres-statefulset.yml
+  - broadcaster-deployment.yml  
+  - deployment.yml          
+  - nats-deployment.yml  
+  - pv-claim.yml

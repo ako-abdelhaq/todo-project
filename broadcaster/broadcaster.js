@@ -10,9 +10,21 @@ const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
+// Log only (for staging)
+const LOG_ONLY = process.env.LOG_ONLY === 'true';
+
 const sc = StringCodec();
 
 async function forwardToChat(eventData) {
+
+  const textMessage_ = `[Broadcaster: ${POD_NAME}] Todo ${eventData.action}: #${eventData.todo.id} "${eventData.todo.content}" (done: ${eventData.todo.done})`;
+
+  // In staging, only log the message and do not forward to external services
+  if (LOG_ONLY) {
+    console.log(`[${new Date().toISOString()}] [STAGING LOG-ONLY] ${textMessage_}`);
+    return;
+  }
+
   const statusVerb = eventData.action === 'created'
     ? 'created'
     : `marked as ${eventData.todo.done ? 'DONE' : 'UNDONE'}`;
