@@ -10,6 +10,34 @@ spec:
     requests:
       storage: 1Gi
 ---
+# Runs once on deploy so a Pod immediately consumes and binds postgres-backup-pvc
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-backup-init
+  namespace: production
+spec:
+  ttlSecondsAfterFinished: 60
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init-backup-volume
+          image: postgres:16-alpine
+          command:
+            - /bin/sh
+            - -c
+            - |
+              mkdir -p /backups
+              echo "Backup volume initialized at $(date -u +%Y-%m-%dT%H:%M:%SZ)" > /backups/.initialized
+          volumeMounts:
+            - name: backup-storage
+              mountPath: /backups
+      volumes:
+        - name: backup-storage
+          persistentVolumeClaim:
+            claimName: postgres-backup-pvc
+---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
