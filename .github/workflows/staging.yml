@@ -63,8 +63,8 @@ jobs:
         if: steps.changes.outputs.todo_app == 'true'
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./todo-app
+          file: ./todo-app/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/todo-app:${{ github.sha }}
 
