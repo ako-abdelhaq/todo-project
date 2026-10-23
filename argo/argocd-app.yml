@@ -1,3 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-config
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-config
+    app.kubernetes.io/part-of: argocd
+data:
+  # Poll Git every 15 seconds (with up to 5s jitter) instead of the 3-minute default
+  timeout.reconciliation: "15s"
+  timeout.reconciliation.jitter: "5s"
+  
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
