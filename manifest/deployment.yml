@@ -21,7 +21,7 @@ spec:
             claimName: image-cache-pvc
       containers:
         - name: ako-project
-          image: ako99/todo-app:7b6fb4a2925fd3a74390916a2ba9224d373b51aa
+          image: ako99/todo-app:4e219fa7282b6beabc67d005c7b8ab93618fb91a
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -54,7 +54,7 @@ spec:
               memory: "128Mi"
               cpu: "250m"
         - name: todo-backend
-          image: ako99/todo-backend:7b6fb4a2925fd3a74390916a2ba9224d373b51aa
+          image: ako99/todo-backend:4e219fa7282b6beabc67d005c7b8ab93618fb91a
           imagePullPolicy: Always            
           envFrom:
           - secretRef:
