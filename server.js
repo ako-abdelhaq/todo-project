@@ -370,8 +370,8 @@ app.get('/', (req, res) => {
               <img src="/image" alt="Random Picsum Banner" />
               <div class="hero-overlay">
                 <div class="hero-header">
-                  <h1>Ako's Todo App</h1>
-                  <span class="cache-badge">Cached Image: ${ageDisplay} </span>
+                  <h1>Ako's Todo app</h1>
+                  <span class="cache-badge">Cached Image: ${ageDisplay}</span>
                 </div>
               </div>
             </div>
