@@ -33,7 +33,7 @@ jobs:
             todo_app:
               - 'todo-app/**'
             todo_backend:
-              - 'to-do-backend/**'
+              - 'todo-backend/**'
             broadcaster:
               - 'broadcaster/**'
             todo_cronjob:
