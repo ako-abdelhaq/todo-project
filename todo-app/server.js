@@ -94,7 +94,7 @@ app.get('/image', async (req, res) => {
 
 // Root URL serving the HTML and client-side JavaScript
 app.get('/', (req, res) => {
-  let ageSeconds = 'Uploading image...';
+  let ageSeconds = 'Downloading image...';
   let ageDisplay = ageSeconds;
   if (fs.existsSync(IMAGE_PATH)) {
     const stats = fs.statSync(IMAGE_PATH);
@@ -370,7 +370,7 @@ app.get('/', (req, res) => {
               <img src="/image" alt="Random Picsum Banner" />
               <div class="hero-overlay">
                 <div class="hero-header">
-                  <h1>Ako's Todo App </h1>
+                  <h1>Ako's Todo App</h1>
                   <span class="cache-badge">Cached Image: ${ageDisplay}</span>
                 </div>
               </div>
