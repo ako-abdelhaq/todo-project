@@ -7,7 +7,7 @@ START_TIME=$(date +%s)
 
 WIKI_URL=$(curl -s -A "TodoAppCron/1.0" -o /dev/null -w '%{redirect_url}' https://en.wikipedia.org/wiki/Special:Random)
 
-#echo "Adding todo: Read ${WIKI_URL}"
+echo "Adding todo: Read ${WIKI_URL}"
 
 curl -s -f -X POST "$BACKEND_URL" \
   -H "Content-Type: application/json" \
