@@ -1,3 +1,4 @@
+
 name: Release Todo App - production
 
 run-name: Deploy release ${{ github.ref_name }}
@@ -6,74 +7,83 @@ on:
   push:
     tags:
       - 'v*'
-    paths-ignore:
-      - 'manifest/**'
-      - 'argo/**'
-      - 'monitoring/**'
-      - '.gitignore'
-      - '**.sh'
 
 concurrency:
-  group: gitops-ako-abdelhaq-todo-project
+  # Use the same group in staging and production to serialize config pushes.
+  group: gitops-ako-abdelhaq-todo-project-config
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build-and-update-manifest-production:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      # 1. Checkout application code at the release tag
+      - name: Checkout application repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # 2. Detect changed microservices since the previous release
       - name: Detect changes since previous production tag
         id: changes
+        shell: bash
         run: |
+          set -euo pipefail
+
           git fetch --tags --force
+
           CURRENT_TAG="${GITHUB_REF_NAME}"
-          # Find the previous v* tag before the current one
-          PREV_TAG=$(git tag -l "v*" --sort=-version:refname | grep -v "^${CURRENT_TAG}$" | head -n 1 || true)
+
+          # Find the next older version tag in descending version order.
+          TAGS="$(git tag --list 'v*' --sort=-version:refname --merged "$CURRENT_TAG")"
+
+          PREV_TAG="$(printf '%s\n' "$TAGS" | awk -v current="$CURRENT_TAG" '
+            $0 == current { found=1; next }
+            found { print; exit }
+          ')"
 
           if [ -z "$PREV_TAG" ]; then
-            echo "No previous release tag found. Building all services for initial release ${CURRENT_TAG}."
-            echo "todo_app=true" >> $GITHUB_OUTPUT
-            echo "todo_backend=true" >> $GITHUB_OUTPUT
-            echo "broadcaster=true" >> $GITHUB_OUTPUT
-            echo "todo_cronjob=true" >> $GITHUB_OUTPUT
+            echo "No previous release tag found. Building all services."
+            echo "todo_app=true" >> "$GITHUB_OUTPUT"
+            echo "todo_backend=true" >> "$GITHUB_OUTPUT"
+            echo "broadcaster=true" >> "$GITHUB_OUTPUT"
+            echo "todo_cronjob=true" >> "$GITHUB_OUTPUT"
           else
             echo "Comparing ${PREV_TAG}..${CURRENT_TAG}"
-            CHANGED_FILES=$(git diff --name-only "${PREV_TAG}" "${CURRENT_TAG}")
-            echo "Changed files since ${PREV_TAG}:"
-            echo "${CHANGED_FILES}"
 
-            if echo "$CHANGED_FILES" | grep -q "^todo-app/"; then
-              echo "todo_app=true" >> $GITHUB_OUTPUT
+            CHANGED_FILES="$(git diff --name-only "$PREV_TAG" "$CURRENT_TAG")"
+            echo "$CHANGED_FILES"
+
+            if grep -q '^todo-app/' <<< "$CHANGED_FILES"; then
+              echo "todo_app=true" >> "$GITHUB_OUTPUT"
             else
-              echo "todo_app=false" >> $GITHUB_OUTPUT
+              echo "todo_app=false" >> "$GITHUB_OUTPUT"
             fi
 
-            if echo "$CHANGED_FILES" | grep -q "^todo-backend/"; then
-              echo "todo_backend=true" >> $GITHUB_OUTPUT
+            if grep -q '^to-do-backend/' <<< "$CHANGED_FILES"; then
+              echo "todo_backend=true" >> "$GITHUB_OUTPUT"
             else
-              echo "todo_backend=false" >> $GITHUB_OUTPUT
+              echo "todo_backend=false" >> "$GITHUB_OUTPUT"
             fi
 
-            if echo "$CHANGED_FILES" | grep -q "^broadcaster/"; then
-              echo "broadcaster=true" >> $GITHUB_OUTPUT
+            if grep -q '^broadcaster/' <<< "$CHANGED_FILES"; then
+              echo "broadcaster=true" >> "$GITHUB_OUTPUT"
             else
-              echo "broadcaster=false" >> $GITHUB_OUTPUT
+              echo "broadcaster=false" >> "$GITHUB_OUTPUT"
             fi
 
-            if echo "$CHANGED_FILES" | grep -q "^todo-cronjob/"; then
-              echo "todo_cronjob=true" >> $GITHUB_OUTPUT
+            if grep -q '^todo-cronjob/' <<< "$CHANGED_FILES"; then
+              echo "todo_cronjob=true" >> "$GITHUB_OUTPUT"
             else
-              echo "todo_cronjob=false" >> $GITHUB_OUTPUT
+              echo "todo_cronjob=false" >> "$GITHUB_OUTPUT"
             fi
           fi
-      
+
+      # 3. Set up Docker Buildx if a service changed
       - name: Set up Docker Buildx
         if: |
           steps.changes.outputs.todo_app == 'true' ||
@@ -81,7 +91,8 @@ jobs:
           steps.changes.outputs.broadcaster == 'true' ||
           steps.changes.outputs.todo_cronjob == 'true'
         uses: docker/setup-buildx-action@v3
-      
+
+      # 4. Log in to Docker Hub
       - name: Log in to Docker Hub
         if: |
           steps.changes.outputs.todo_app == 'true' ||
@@ -93,6 +104,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # 5. Build and push changed services
       - name: Build and push todo-app
         if: steps.changes.outputs.todo_app == 'true'
         uses: docker/build-push-action@v6
@@ -129,32 +141,89 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/todo-cronjob:${{ github.sha }}
 
-      - name: Update image tags directly in YAML manifest
+      # 6. Checkout the separate configuration repository
+      - name: Checkout configuration repository
+        if: |
+          steps.changes.outputs.todo_app == 'true' ||
+          steps.changes.outputs.todo_backend == 'true' ||
+          steps.changes.outputs.broadcaster == 'true' ||
+          steps.changes.outputs.todo_cronjob == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ako-abdelhaq/todo-project-config
+          ref: main
+          token: ${{ secrets.CONFIG_REPO_TOKEN }}
+          path: config
+          fetch-depth: 0
+
+      # 7. Update production manifests in the configuration repository
+      - name: Update production image tags
+        if: |
+          steps.changes.outputs.todo_app == 'true' ||
+          steps.changes.outputs.todo_backend == 'true' ||
+          steps.changes.outputs.broadcaster == 'true' ||
+          steps.changes.outputs.todo_cronjob == 'true'
+        shell: bash
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          IMAGE_TAG: ${{ github.sha }}
+          APP_CHANGED: ${{ steps.changes.outputs.todo_app }}
+          BACKEND_CHANGED: ${{ steps.changes.outputs.todo_backend }}
+          BROADCASTER_CHANGED: ${{ steps.changes.outputs.broadcaster }}
+          CRONJOB_CHANGED: ${{ steps.changes.outputs.todo_cronjob }}
         run: |
-          if [ "${{ steps.changes.outputs.todo_app }}" = "true" ]; then
-            sed -i -E "s|image: (.*/)?todo-app:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-app:${{ github.sha }}|g" manifest/production/deployment.yml
+          set -euo pipefail
+
+          if [ "$APP_CHANGED" = "true" ]; then
+            sed -i -E \
+              "s|image: (.*/)?todo-app:.*|image: ${DOCKERHUB_USERNAME}/todo-app:${IMAGE_TAG}|g" \
+              config/manifest/production/deployment.yml
           fi
 
-          if [ "${{ steps.changes.outputs.todo_backend }}" = "true" ]; then
-            sed -i -E "s|image: (.*/)?todo-backend:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend:${{ github.sha }}|g" manifest/production/deployment.yml
+          if [ "$BACKEND_CHANGED" = "true" ]; then
+            sed -i -E \
+              "s|image: (.*/)?todo-backend:.*|image: ${DOCKERHUB_USERNAME}/todo-backend:${IMAGE_TAG}|g" \
+              config/manifest/production/deployment.yml
           fi
 
-          if [ "${{ steps.changes.outputs.broadcaster }}" = "true" ]; then
-            sed -i -E "s|image: (.*/)?broadcaster:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/broadcaster:${{ github.sha }}|g" manifest/production/broadcaster-deployment.yml
+          if [ "$BROADCASTER_CHANGED" = "true" ]; then
+            sed -i -E \
+              "s|image: (.*/)?broadcaster:.*|image: ${DOCKERHUB_USERNAME}/broadcaster:${IMAGE_TAG}|g" \
+              config/manifest/production/broadcaster-deployment.yml
           fi
 
-          if [ "${{ steps.changes.outputs.todo_cronjob }}" = "true" ]; then
-            sed -i -E "s|image: (.*/)?todo-cronjob:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/todo-cronjob:${{ github.sha }}|g" manifest/production/cronjob.yml
+          if [ "$CRONJOB_CHANGED" = "true" ]; then
+            sed -i -E \
+              "s|image: (.*/)?todo-cronjob:.*|image: ${DOCKERHUB_USERNAME}/todo-cronjob:${IMAGE_TAG}|g" \
+              config/manifest/production/cronjob.yml
           fi
 
-      - name: Commit and push updated manifest
+      # 8. Commit and push only to the configuration repository
+      - name: Commit and push production manifests
+        if: |
+          steps.changes.outputs.todo_app == 'true' ||
+          steps.changes.outputs.todo_backend == 'true' ||
+          steps.changes.outputs.broadcaster == 'true' ||
+          steps.changes.outputs.todo_cronjob == 'true'
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin main
-          git checkout main
-          git add manifest/production/*.yml
-          git diff --staged --quiet || (
-            git commit -m "Production: release ${{ github.ref_name }}"
-            git push origin main
-          )
+          set -euo pipefail
+
+          git -C config config user.name "github-actions[bot]"
+          git -C config config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git -C config add -- manifest/production/
+
+          if git -C config diff --cached --quiet; then
+            echo "No production manifest changes to commit."
+            exit 0
+          fi
+
+          git -C config commit \
+            -m "Production: release ${RELEASE_TAG}"
+
+          git -C config pull --rebase origin main
+          git -C config push origin HEAD:main
