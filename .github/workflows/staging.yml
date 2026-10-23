@@ -119,7 +119,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add manifest/staging/*.yml
           git diff --staged --quiet || (
-            git commit -m "Staging: update images for ${{ github.sha }} [skip ci]"
+            git commit -m "Staging: update images for ${{ github.sha }}"
             git pull --rebase origin main
             git push origin main
           )

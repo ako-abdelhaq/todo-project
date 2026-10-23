@@ -27,19 +27,51 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Detect changed microservice directories
-        uses: dorny/paths-filter@v3
+      - name: Detect changes since previous production tag
         id: changes
-        with:
-          filters: |
-            todo_app:
-              - 'todo-app/**'
-            todo_backend:
-              - 'todo-backend/**'
-            broadcaster:
-              - 'broadcaster/**'
-            todo_cronjob:
-              - 'todo-cronjob/**'
+        run: |
+          git fetch --tags --force
+          CURRENT_TAG="${GITHUB_REF_NAME}"
+          # Find the previous v* tag before the current one
+          PREV_TAG=$(git tag -l "v*" --sort=-version:refname | grep -v "^${CURRENT_TAG}$" | head -n 1 || true)
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous release tag found. Building all services for initial release ${CURRENT_TAG}."
+            echo "todo_app=true" >> $GITHUB_OUTPUT
+            echo "todo_backend=true" >> $GITHUB_OUTPUT
+            echo "broadcaster=true" >> $GITHUB_OUTPUT
+            echo "todo_cronjob=true" >> $GITHUB_OUTPUT
+          else
+            echo "Comparing ${PREV_TAG}..${CURRENT_TAG}"
+            CHANGED_FILES=$(git diff --name-only "${PREV_TAG}" "${CURRENT_TAG}")
+            echo "Changed files since ${PREV_TAG}:"
+            echo "${CHANGED_FILES}"
+
+            if echo "$CHANGED_FILES" | grep -q "^todo-app/"; then
+              echo "todo_app=true" >> $GITHUB_OUTPUT
+            else
+              echo "todo_app=false" >> $GITHUB_OUTPUT
+            fi
+
+            if echo "$CHANGED_FILES" | grep -q "^todo-backend/"; then
+              echo "todo_backend=true" >> $GITHUB_OUTPUT
+            else
+              echo "todo_backend=false" >> $GITHUB_OUTPUT
+            fi
+
+            if echo "$CHANGED_FILES" | grep -q "^broadcaster/"; then
+              echo "broadcaster=true" >> $GITHUB_OUTPUT
+            else
+              echo "broadcaster=false" >> $GITHUB_OUTPUT
+            fi
+
+            if echo "$CHANGED_FILES" | grep -q "^todo-cronjob/"; then
+              echo "todo_cronjob=true" >> $GITHUB_OUTPUT
+            else
+              echo "todo_cronjob=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+      
       - name: Set up Docker Buildx
         if: |
           steps.changes.outputs.todo_app == 'true' ||
