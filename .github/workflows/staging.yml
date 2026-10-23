@@ -74,8 +74,8 @@ jobs:
         if: steps.changes.outputs.todo_backend == 'true'
         uses: docker/build-push-action@v6
         with:
-          context: ./to-do-backend
-          file: ./to-do-backend/Dockerfile.backend
+          context: ./todo-backend
+          file: ./todo-backend/Dockerfile.backend
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend:${{ github.sha }}
 

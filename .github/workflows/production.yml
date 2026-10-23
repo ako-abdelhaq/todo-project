@@ -64,7 +64,7 @@ jobs:
               echo "todo_app=false" >> "$GITHUB_OUTPUT"
             fi
 
-            if grep -q '^to-do-backend/' <<< "$CHANGED_FILES"; then
+            if grep -q '^todo-backend/' <<< "$CHANGED_FILES"; then
               echo "todo_backend=true" >> "$GITHUB_OUTPUT"
             else
               echo "todo_backend=false" >> "$GITHUB_OUTPUT"
