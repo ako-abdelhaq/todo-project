@@ -21,7 +21,7 @@ spec:
             claimName: prod-image-cache-pvc
       containers:
         - name: ako-project
-          image: ako99/todo-app:5ec216ce81d6a16a60832f630aedfd36006f15a7
+          image: ako99/todo-app:c8311602dc93d996870e64a87d1f511316edeaea
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
